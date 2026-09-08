@@ -1,0 +1,47 @@
+name: Build POS
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mkpos-windows
+          path: dist/**/*
+
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: android-actions/setup-android@v3
+      - run: npm ci
+      - run: npx cap add android
+      - run: npx cap sync android
+      - run: chmod +x android/gradlew
+      - run: ./android/gradlew assembleDebug
+        env:
+          MKPOS_SERVER_URL: ${{ vars.MKPOS_SERVER_URL }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mkpos-android-debug
+          path: android/app/build/outputs/apk/debug/app-debug.apk
