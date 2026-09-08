@@ -1,0 +1,1 @@
+const express=require('express');const routes=require('./ai-supervisor-routes');const original=express.application.listen;express.application.listen=function(...args){routes(this);return original.apply(this,args)};
