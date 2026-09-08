@@ -1,12 +1,12 @@
 {
   "name":"mk-pizza-ice-bar-pos",
-  "version":"1.2.0",
+  "version":"1.2.1",
   "private":true,
   "description":"Premium offline-first restaurant POS for MK Pizza & Ice Bar",
   "main":"electron.js",
   "engines":{"node":">=20 <24"},
-  "scripts":{"start":"node server.js","dev":"node server.js","desktop":"electron .","dist":"electron-builder"},
+  "scripts":{"start":"node migrate.js && node server.js","dev":"node migrate.js && node server.js","desktop":"electron .","dist":"electron-builder"},
   "dependencies":{"better-sqlite3":"^11.8.1","express":"4.21.2","jsonwebtoken":"^9.0.2"},
   "devDependencies":{"electron":"^36.4.0","electron-builder":"^26.0.12"},
-  "build":{"appId":"pk.mkpizza.pos","productName":"MK Pizza & Ice Bar POS","files":["server.js","electron.js","public/**/*","package.json"],"win":{"target":"nsis"}}
+  "build":{"appId":"pk.mkpizza.pos","productName":"MK Pizza & Ice Bar POS","files":["server.js","migrate.js","electron.js","public/**/*","package.json"],"win":{"target":"nsis"}}
 }
