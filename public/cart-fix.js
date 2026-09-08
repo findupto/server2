@@ -18,5 +18,11 @@
     const send=pos=>fetch('/api/sync/push',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${state.token}`},body:JSON.stringify({events:[{entity:'rider_location',entity_id:state.user.id,operation:'upsert',payload:{rider_id:state.user.id,name:state.user.name,lat:pos.coords.latitude,lng:pos.coords.longitude,accuracy:pos.coords.accuracy,at:new Date().toISOString()}}]})}).catch(()=>{});
     window.__riderWatch=navigator.geolocation.watchPosition(send,()=>{}, {enableHighAccuracy:true,maximumAge:30000,timeout:15000});
   }
-  window.addEventListener('online',()=>setTimeout(riderTracking,1000));setTimeout(riderTracking,2500);
+  function managementLink(){
+    if(!window.state?.user||!['admin','owner'].includes(state.user.role))return;
+    if(document.getElementById('bcLink'))return;
+    const host=document.querySelector('.top .row');if(!host)return;
+    const a=document.createElement('a');a.id='bcLink';a.href='/business-center.html';a.textContent='Business Center';a.style.cssText='display:inline-block;padding:7px 10px;border-radius:9px;background:#fff2;color:inherit;text-decoration:none;font-weight:800';host.prepend(a);
+  }
+  window.addEventListener('online',()=>setTimeout(riderTracking,1000));setTimeout(riderTracking,2500);setInterval(()=>{riderTracking();managementLink()},1200);
 })();
