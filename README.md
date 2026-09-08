@@ -8,125 +8,39 @@ Premium offline-first restaurant POS/control center for **MK Pizza & Ice Bar**, 
 - Menu/product CRUD with categories, SKU, unit, price, description and activation/deactivation.
 - Bulk CSV import/export for products and variants.
 - Product variants such as Small/Medium/Large/XL with variant-specific prices and SKUs.
-- Deals/combos with component product/variant quantities for traceable demand and stock planning.
-- Customer signup/login, customer history and staff-side customer management.
-- Orders for takeaway, dine-in, delivery and online flows.
-- Authorization gate before kitchen preparation.
-- Kitchen queue/timeline states and cashier payment/closing.
-- Rider delivery workflow and rider history/detail access.
-- 20-table status map.
-- Inventory items, stock adjustments, purchases/receiving, suppliers and stock movement ledger.
-- Recipe/BOM consumption tied to the Preparing transition, with insufficient-stock protection.
-- Production/yield/loss records and wastage transactions.
-- Sales analytics, product/variant performance, sales by order type and expense/profit totals.
-- Expenses, approvals and audit trail.
-- Settings API and sync-event API for connected clients.
-- SQLite WAL local persistence and browser offline queue.
-- Installable PWA shell and Electron Windows desktop shell.
-- **AI Voice Copilot** for natural-language product creation, controlled price updates, voice-to-cart sales, order lookup, cash/change calculation and receipt printing.
-- **Universal AI POS Agent** for multi-step conversational control of products, prices, sales, orders, tables, riders, customers, inventory, expenses and role messaging.
-- **AI Camera/Vision** for visual inspection of POS scenes, tables, slips, queues and operational issues.
-- **AI Security Monitor** for suspicious operational conditions, safe automatic corrections and audit logging.
+- Deals/combos, customers, takeaway/dine-in/delivery/online orders, kitchen authorization and queue, cashier payment/closing, rider workflow.
+- 20-table status map, inventory, recipes/BOM, purchases, suppliers, production, wastage, expenses, approvals, analytics, audit and sync APIs.
+- SQLite WAL persistence, PWA shell and Electron Windows desktop shell.
+- **Universal AI POS Agent**: natural chat, continuous browser voice, camera/vision inspection, multi-step instructions and role-aware execution across products, prices, sales, tables, orders, kitchen, riders, customers, inventory, expenses and staff messaging.
+- **AI Security Monitor** for suspicious operational conditions and safe automatic corrections.
+- **Voice Table Ordering** for customer self-order scenarios.
 
-## Universal AI POS Agent
+## Ultimate AI
 
-The AI now treats a spoken or typed instruction as one complete command rather than one keyword. It can understand multi-step instructions, corrections, quantities and variants, then execute a sequence of approved POS actions server-side.
+The AI command center accepts complete instructions rather than requiring one command at a time. It can understand quantities, variants, tables, order references, staff roles and multi-step sequences, then execute approved actions through the server with role checks and audit logging.
 
 Examples:
 
 - `Create Chicken Fajita Pizza with Small 550, Medium 1050, Large 1350 and XL 1950.`
-- `Make a new sale: 1 Large Pizza, 2 Special Shawarma, 4 Zinger Burger Special and 5 Hotwings.`
-- `Move order 104 to preparing and tell the kitchen it is urgent.`
-- `Set table 5 available and assign order 204 to rider Ahmed.`
-- `Show me low-stock chicken and create a 5000 rupee chicken expense.`
+- `Make sale: 1 Large Pizza, 2 Special Shawarma, 4 Zinger Burger Special and 5 Hotwings. Table 7. Send it to kitchen.`
+- `Show the latest orders for customer Ali, assign the delivery to Rider Ahmed and tell the rider the order is ready.`
+- `Check inventory for cheese and tell kitchen if stock is low.`
 
-Supported AI actions are role-checked and audited. Low-confidence or ambiguous instructions are not automatically executed. The agent never invents products, tables, customers or riders.
+Voice mode supports continuous recognition with natural spoken responses. Camera mode sends an on-screen POS scene to the vision model for operational inspection. Low-confidence or ambiguous actions are stopped for confirmation; server-side permissions remain authoritative.
 
-## Voice, audio and camera
-
-The AI POS panel supports continuous browser voice recognition, spoken replies, typed chat and camera snapshots. Voice commands can contain a complete natural instruction and the agent can execute multiple POS actions in sequence. Camera snapshots are sent to the configured OpenAI vision model for visual operational analysis; visual findings are advisory unless an explicit POS action is separately authorized.
-
-For a true low-latency speech-to-speech deployment, use an OpenAI Realtime model/client with a server-issued session credential. The current browser implementation provides continuous voice interaction without exposing the server API key to the browser.
-
-## AI Voice Copilot
-
-The AI understands commands such as:
-
-- `Add Chicken Fajita Pizza: Small 550, Medium 1050, Large 1350, XL 1950.`
-- `Make a new sale: 1 Large Pizza, 2 Special Shawarma, 4 Zinger Burger Special, 5 Hotwings.`
-- `Collect cash for order 104, customer gives 2000.`
-
-Voice sales are converted into the existing POS cart so the operator can review and place the order. Product creation and management price changes are executed server-side with role checks, audit records and protection against large unexpected price jumps. Low-confidence AI interpretations are not executed automatically.
-
-Cash handling is software-assisted: the AI identifies an order by order number/QR/token or customer information, calculates the exact change, asks for confirmation, marks the order paid and opens a printable receipt. A physical cash drawer still requires supported hardware integration; the AI never claims to physically receive or return banknotes.
-
-## AI security
-
-Management can run an AI security scan to detect low-risk operational anomalies such as negative prices, duplicate SKUs and stuck kitchen orders. Safe negative prices are corrected to zero and every automatic correction is audited. Higher-risk changes remain blocked until explicitly confirmed.
-
-## Privacy
-
-Login screens no longer display example usernames, passwords or PINs. Credential hints are hidden from the visible POS UI and public documentation. Configure real credentials through environment variables such as `OWNER_PIN`, `ADMIN_PIN` and `JWT_SECRET` before production deployment.
-
-## Windows setup
-
-Use **Node.js 22 LTS**. Node 24 is intentionally outside the supported engine range because `better-sqlite3` is a native module.
-
-```bat
-rmdir /s /q node_modules
-if exist package-lock.json del package-lock.json
-npm install
-npm start
-```
-
-Open `http://localhost:4173`.
-
-For Electron desktop testing:
-
-```bat
-npm run desktop
-```
-
-For the Windows installer:
-
-```bat
-npm run dist
-```
-
-The installer is written to `dist\\`.
+The default AI reasoning/vision model is **GPT-5.6 Sol** with environment-variable overrides. The OpenAI model catalog lists GPT-5.6 Sol as the flagship complex-work model and GPT-Realtime-2.1 as a specialized realtime speech model. citeturn0search0turn1search0
 
 ## AI environment
 
-Set `OPENAI_API_KEY` on the POS/server machine. Optional model overrides:
+Set `OPENAI_API_KEY` on the POS/server machine. Optional overrides:
 
-- `OPENAI_COMMAND_MODEL` for voice/transaction interpretation.
-- `OPENAI_VISION_MODEL` for camera/menu-image AI.
+- `OPENAI_COMMAND_MODEL` — defaults to `gpt-5.6-sol`.
+- `OPENAI_VISION_MODEL` — defaults to `gpt-5.6-sol`.
+- `OPENAI_REALTIME_MODEL` — reserved for realtime voice integration.
 - `JWT_SECRET`, `OWNER_PIN` and `ADMIN_PIN` for production authentication.
 
-OpenAI's current model catalog lists GPT-5.6 Luna as a cost-sensitive model with text and image input, while Realtime models are intended for realtime speech-to-speech interaction. citeturn0search0
+## Remaining production upgrades
 
-## Offline and network operation
+The core POS and AI control layer are substantially implemented. The major remaining production-grade items are: native OpenAI Realtime/WebRTC speech-to-speech instead of browser SpeechRecognition, anonymous QR/NFC guest table sessions, direct kitchen auto-dispatch for confirmed guest voice orders, payment-terminal/cash-drawer/printer hardware integrations, continuous camera monitoring, stronger transaction concurrency/idempotency, automated backups/restore, automated tests and CI, HTTPS deployment, and removal of development fallback credentials/secrets.
 
-The browser/PWA can keep the menu shell and locally queued orders available when the network drops. Queued order writes are replayed when connectivity returns. The server also exposes sync-event endpoints for a central deployment.
-
-For true multi-location production deployment, host the Node service behind HTTPS and use a shared production database/queue. Do not expose a store SQLite file directly to the internet. Keep regular backups and set a strong `JWT_SECRET` and role PINs through environment variables.
-
-## Inventory lifecycle
-
-A normal stock-controlled order follows:
-
-`Order → Authorized → Preparing → Recipe/BOM consumption → Ready → Payment → Closed`
-
-Production records raw input, usable output, loss and yield. Recipes consume the resulting inventory according to the configured BOM. Wastage and purchasing create their own stock movements so the ledger remains traceable.
-
-## CSV menu format
-
-Exported CSV contains:
-
-`type,id,product_id,name,category,sku,price,unit,active,description`
-
-Use `type=product` for menu products and `type=variant` with the parent `product_id` for variants. Import is upsert-based, so stable IDs/SKUs can be used for repeat bulk updates.
-
-## Security
-
-Authorization is enforced on the server, not only by the UI. Customers can only see their own orders; waiters and riders are scoped to their assigned work; management APIs require admin/owner roles. Production credentials must be supplied through environment variables and must never be committed to source control.
+For production deployment, use HTTPS, a strong `JWT_SECRET`, real environment credentials, regular backups and a shared production database/queue for multi-location operation. Never expose the SQLite file directly to the internet.
