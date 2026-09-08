@@ -36,11 +36,13 @@ jobs:
       - uses: android-actions/setup-android@v3
       - run: npm ci
       - run: npx cap add android
-      - run: npx cap sync android
-      - run: chmod +x android/gradlew
-      - run: ./android/gradlew assembleDebug
         env:
           MKPOS_SERVER_URL: ${{ vars.MKPOS_SERVER_URL }}
+      - run: npx cap sync android
+        env:
+          MKPOS_SERVER_URL: ${{ vars.MKPOS_SERVER_URL }}
+      - run: chmod +x android/gradlew
+      - run: ./android/gradlew assembleDebug
       - uses: actions/upload-artifact@v4
         with:
           name: mkpos-android-debug
