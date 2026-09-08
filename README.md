@@ -5,7 +5,6 @@ Premium offline-first restaurant POS/control center for **MK Pizza & Ice Bar**, 
 ## Current release
 
 - Role-based customer, waiter, rider, kitchen, cashier, admin and owner displays.
-- Owner account: **Malik / 0099**. Admin: **admin / 1122**. Waiter, kitchen, cashier and rider: **1234**.
 - Menu/product CRUD with categories, SKU, unit, price, description and activation/deactivation.
 - Bulk CSV import/export for products and variants.
 - Product variants such as Small/Medium/Large/XL with variant-specific prices and SKUs.
@@ -24,6 +23,28 @@ Premium offline-first restaurant POS/control center for **MK Pizza & Ice Bar**, 
 - Settings API and sync-event API for connected clients.
 - SQLite WAL local persistence and browser offline queue.
 - Installable PWA shell and Electron Windows desktop shell.
+- **AI Voice Copilot** for natural-language product creation, controlled price updates, voice-to-cart sales, order lookup, cash/change calculation and receipt printing.
+- **AI Security Monitor** for suspicious operational conditions, safe automatic corrections and audit logging.
+
+## AI Voice Copilot
+
+The AI understands commands such as:
+
+- `Add Chicken Fajita Pizza: Small 550, Medium 1050, Large 1350, XL 1950.`
+- `Make a new sale: 1 Large Pizza, 2 Special Shawarma, 4 Zinger Burger Special, 5 Hotwings.`
+- `Collect cash for order 104, customer gives 2000.`
+
+Voice sales are converted into the existing POS cart so the operator can review and place the order. Product creation and management price changes are executed server-side with role checks, audit records and protection against large unexpected price jumps. Low-confidence AI interpretations are not executed automatically.
+
+Cash handling is software-assisted: the AI identifies an order by order number/QR/token or customer information, calculates the exact change, asks for confirmation, marks the order paid and opens a printable receipt. A physical cash drawer still requires supported hardware integration; the AI never claims to physically receive or return banknotes.
+
+## AI security
+
+Management can run an AI security scan to detect low-risk operational anomalies such as negative prices, duplicate SKUs and stuck kitchen orders. Safe negative prices are corrected to zero and every automatic correction is audited. Higher-risk changes remain blocked until explicitly confirmed.
+
+## Privacy
+
+Login screens no longer display example usernames, passwords or PINs. Credential hints are hidden from the visible POS UI and public documentation. Configure real credentials through environment variables such as `OWNER_PIN`, `ADMIN_PIN` and `JWT_SECRET` before production deployment.
 
 ## Windows setup
 
@@ -52,6 +73,14 @@ npm run dist
 
 The installer is written to `dist\\`.
 
+## AI environment
+
+Set `OPENAI_API_KEY` on the POS/server machine. Optional model overrides:
+
+- `OPENAI_COMMAND_MODEL` for voice/transaction interpretation.
+- `OPENAI_VISION_MODEL` for menu-image AI.
+- `JWT_SECRET`, `OWNER_PIN` and `ADMIN_PIN` for production authentication.
+
 ## Offline and network operation
 
 The browser/PWA can keep the menu shell and locally queued orders available when the network drops. Queued order writes are replayed when connectivity returns. The server also exposes sync-event endpoints for a central deployment.
@@ -76,4 +105,4 @@ Use `type=product` for menu products and `type=variant` with the parent `product
 
 ## Security
 
-Authorization is enforced on the server, not only by the UI. Customers can only see their own orders; waiters and riders are scoped to their assigned work; management APIs require admin/owner roles. Before public deployment, replace the default credentials and JWT secret.
+Authorization is enforced on the server, not only by the UI. Customers can only see their own orders; waiters and riders are scoped to their assigned work; management APIs require admin/owner roles. Production credentials must be supplied through environment variables and must never be committed to source control.
