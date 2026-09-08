@@ -1,0 +1,28 @@
+{
+  "name": "mk-pizza-ice-bar-pos",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Offline-first restaurant POS with customer, waiter, rider, kitchen, cashier and admin displays.",
+  "main": "electron.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "desktop": "electron .",
+    "dist": "electron-builder"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.8.1",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "devDependencies": {
+    "electron": "^36.4.0",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "pk.mkpizza.pos",
+    "productName": "MK Pizza & Ice Bar POS",
+    "files": ["server.js", "electron.js", "public/**/*", "package.json"],
+    "win": { "target": "nsis", "icon": "public/icon.ico" }
+  }
+}
