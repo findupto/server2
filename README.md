@@ -28,7 +28,7 @@ Examples:
 
 Voice mode supports continuous recognition with natural spoken responses. Camera mode sends an on-screen POS scene to the vision model for operational inspection. Low-confidence or ambiguous actions are stopped for confirmation; server-side permissions remain authoritative.
 
-The default AI reasoning/vision model is **GPT-5.6 Sol** with environment-variable overrides. The OpenAI model catalog lists GPT-5.6 Sol as the flagship complex-work model and GPT-Realtime-2.1 as a specialized realtime speech model. citeturn0search0turn1search0
+The default AI reasoning and vision model is **GPT-5.6 Sol**, with environment-variable overrides. A dedicated realtime speech model is reserved for the next native realtime/WebRTC voice layer.
 
 ## AI environment
 
