@@ -1,6 +1,6 @@
 {
   "name":"mk-pizza-ice-bar-pos",
-  "version":"1.1.0",
+  "version":"1.2.0",
   "private":true,
   "description":"Premium offline-first restaurant POS for MK Pizza & Ice Bar",
   "main":"electron.js",
