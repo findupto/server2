@@ -24,7 +24,29 @@ Premium offline-first restaurant POS/control center for **MK Pizza & Ice Bar**, 
 - SQLite WAL local persistence and browser offline queue.
 - Installable PWA shell and Electron Windows desktop shell.
 - **AI Voice Copilot** for natural-language product creation, controlled price updates, voice-to-cart sales, order lookup, cash/change calculation and receipt printing.
+- **Universal AI POS Agent** for multi-step conversational control of products, prices, sales, orders, tables, riders, customers, inventory, expenses and role messaging.
+- **AI Camera/Vision** for visual inspection of POS scenes, tables, slips, queues and operational issues.
 - **AI Security Monitor** for suspicious operational conditions, safe automatic corrections and audit logging.
+
+## Universal AI POS Agent
+
+The AI now treats a spoken or typed instruction as one complete command rather than one keyword. It can understand multi-step instructions, corrections, quantities and variants, then execute a sequence of approved POS actions server-side.
+
+Examples:
+
+- `Create Chicken Fajita Pizza with Small 550, Medium 1050, Large 1350 and XL 1950.`
+- `Make a new sale: 1 Large Pizza, 2 Special Shawarma, 4 Zinger Burger Special and 5 Hotwings.`
+- `Move order 104 to preparing and tell the kitchen it is urgent.`
+- `Set table 5 available and assign order 204 to rider Ahmed.`
+- `Show me low-stock chicken and create a 5000 rupee chicken expense.`
+
+Supported AI actions are role-checked and audited. Low-confidence or ambiguous instructions are not automatically executed. The agent never invents products, tables, customers or riders.
+
+## Voice, audio and camera
+
+The AI POS panel supports continuous browser voice recognition, spoken replies, typed chat and camera snapshots. Voice commands can contain a complete natural instruction and the agent can execute multiple POS actions in sequence. Camera snapshots are sent to the configured OpenAI vision model for visual operational analysis; visual findings are advisory unless an explicit POS action is separately authorized.
+
+For a true low-latency speech-to-speech deployment, use an OpenAI Realtime model/client with a server-issued session credential. The current browser implementation provides continuous voice interaction without exposing the server API key to the browser.
 
 ## AI Voice Copilot
 
@@ -78,8 +100,10 @@ The installer is written to `dist\\`.
 Set `OPENAI_API_KEY` on the POS/server machine. Optional model overrides:
 
 - `OPENAI_COMMAND_MODEL` for voice/transaction interpretation.
-- `OPENAI_VISION_MODEL` for menu-image AI.
+- `OPENAI_VISION_MODEL` for camera/menu-image AI.
 - `JWT_SECRET`, `OWNER_PIN` and `ADMIN_PIN` for production authentication.
+
+OpenAI's current model catalog lists GPT-5.6 Luna as a cost-sensitive model with text and image input, while Realtime models are intended for realtime speech-to-speech interaction. citeturn0search0
 
 ## Offline and network operation
 
