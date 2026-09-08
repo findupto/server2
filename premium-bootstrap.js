@@ -1,0 +1,1 @@
+const express=require('express');const premium=require('./premium-routes');const original=express.application.listen;express.application.listen=function(...args){try{premium(this)}catch(e){console.error('Premium backend extension failed:',e.message);throw e}return original.apply(this,args)};
