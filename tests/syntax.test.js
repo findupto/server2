@@ -17,7 +17,13 @@ function jsFiles(dir){
 }
 
 test('all repository JavaScript files parse successfully',()=>{
-  for(const file of jsFiles(process.cwd()))assert.doesNotThrow(()=>execFileSync(process.execPath,['--check',file],{stdio:'pipe'}),file);
+  for(const file of jsFiles(process.cwd())){
+    try{execFileSync(process.execPath,['--check',file],{stdio:'pipe'})}
+    catch(e){
+      const detail=Buffer.isBuffer(e.stderr)?e.stderr.toString():String(e.stderr||e.message||e);
+      throw new Error(`JavaScript syntax error in ${path.relative(process.cwd(),file)}\n${detail}`);
+    }
+  }
 });
 
 test('package manifest is valid JSON and includes required production scripts',()=>{
@@ -30,17 +36,22 @@ test('package manifest is valid JSON and includes required production scripts',(
 });
 
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
-async function waitFor(url,child){
+async function waitFor(url,child,getLogs){
   const deadline=Date.now()+30000;
   let last;
   while(Date.now()<deadline){
-    if(child.exitCode!==null)throw new Error(`server exited with code ${child.exitCode}`);
+    if(child.exitCode!==null)throw new Error(`server exited with code ${child.exitCode}\n${getLogs()}`);
     try{const r=await fetch(url);if(r.ok)return}catch(e){last=e}
     await wait(250);
   }
-  throw last||new Error('server did not become ready');
+  throw new Error(`${last?.message||'server did not become ready'}\n${getLogs()}`);
 }
-async function jsonFetch(url,options={}){const r=await fetch(url,options);const text=await r.text();let data={};try{data=JSON.parse(text)}catch{}return {r,data,text}}
+async function jsonFetch(url,options={},getLogs=()=> ''){
+  let r;
+  try{r=await fetch(url,options)}catch(e){throw new Error(`Fetch failed for ${url}: ${e?.message||e}\n${getLogs()}`)}
+  const text=await r.text();let data={};try{data=JSON.parse(text)}catch{}
+  return {r,data,text};
+}
 function deviceHeaders(secret,deviceId,token,method,url,body=''){
   const ts=String(Date.now()),nonce=crypto.randomUUID();
   const bodyHash=crypto.createHash('sha256').update(body).digest('hex');
@@ -58,17 +69,18 @@ test('production server starts and trusted-device authentication works end-to-en
   const args=isWindows?['/d','/s','/c','npm start']:['npm','start'];
   const child=spawn(command,args,{cwd:process.cwd(),env:{...process.env,PORT:String(port),DB_PATH:dbPath,JWT_SECRET:'test-secret-'+crypto.randomBytes(12).toString('hex'),REQUIRE_TRUSTED_DEVICE:'1',OPENAI_API_KEY:''},stdio:['ignore','pipe','pipe'],windowsVerbatimArguments:false});
   let logs='';child.stdout.on('data',b=>{logs+=b.toString()});child.stderr.on('data',b=>{logs+=b.toString()});
+  const getLogs=()=>logs.slice(-12000);
   t.after(async()=>{if(child.exitCode===null)child.kill('SIGTERM');await wait(250);for(const suffix of ['', '-shm', '-wal'])try{fs.unlinkSync(dbPath+suffix)}catch{}});
   const base=`http://127.0.0.1:${port}`;
-  await waitFor(`${base}/api/health`,child);
-  const health=await jsonFetch(`${base}/api/health`);assert.equal(health.r.status,200);assert.equal(health.data.ok,true);
-  const login=await jsonFetch(`${base}/api/login`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({username:'admin',password:'1122'})});
-  assert.equal(login.r.status,200,logs);const token=login.data.token;assert.ok(token);
-  const noDevice=await jsonFetch(`${base}/api/bootstrap`,{headers:{authorization:`Bearer ${token}`}});assert.equal(noDevice.r.status,401);assert.equal(noDevice.data.error,'Trusted app device authentication required');
-  const registered=await jsonFetch(`${base}/api/device/register`,{method:'POST',headers:{'content-type':'application/json',authorization:`Bearer ${token}`},body:JSON.stringify({device_name:'CI device',device_type:'test'})});
-  assert.equal(registered.r.status,200,logs);assert.ok(registered.data.device_id);assert.ok(registered.data.device_secret);
-  const listed=await jsonFetch(`${base}/api/device/list`,{headers:{authorization:`Bearer ${token}`}});assert.equal(listed.r.status,200,logs);assert.ok(listed.data.some(x=>x.id===registered.data.device_id));
+  await waitFor(`${base}/api/health`,child,getLogs);
+  const health=await jsonFetch(`${base}/api/health`,{},getLogs);assert.equal(health.r.status,200);assert.equal(health.data.ok,true);
+  const login=await jsonFetch(`${base}/api/login`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({username:'admin',password:'1122'})},getLogs);
+  assert.equal(login.r.status,200,getLogs());const token=login.data.token;assert.ok(token);
+  const noDevice=await jsonFetch(`${base}/api/bootstrap`,{headers:{authorization:`Bearer ${token}`}},getLogs);assert.equal(noDevice.r.status,401);assert.equal(noDevice.data.error,'Trusted app device authentication required');
+  const registered=await jsonFetch(`${base}/api/device/register`,{method:'POST',headers:{'content-type':'application/json',authorization:`Bearer ${token}`},body:JSON.stringify({device_name:'CI device',device_type:'test'})},getLogs);
+  assert.equal(registered.r.status,200,getLogs());assert.ok(registered.data.device_id);assert.ok(registered.data.device_secret);
+  const listed=await jsonFetch(`${base}/api/device/list`,{headers:{authorization:`Bearer ${token}`}},getLogs);assert.equal(listed.r.status,200,getLogs());assert.ok(listed.data.some(x=>x.id===registered.data.device_id));
   const headers=deviceHeaders(registered.data.device_secret,registered.data.device_id,token,'GET','/api/bootstrap');
-  const protectedResponse=await jsonFetch(`${base}/api/bootstrap`,{headers});assert.equal(protectedResponse.r.status,200,logs);assert.equal(protectedResponse.data.user.role,'admin');
-  const aiCapabilities=await jsonFetch(`${base}/api/v3/ai/capabilities`,{headers:deviceHeaders(registered.data.device_secret,registered.data.device_id,token,'GET','/api/v3/ai/capabilities')});assert.equal(aiCapabilities.r.status,200,logs);assert.equal(aiCapabilities.data.role,'admin');
+  const protectedResponse=await jsonFetch(`${base}/api/bootstrap`,{headers},getLogs);assert.equal(protectedResponse.r.status,200,getLogs());assert.equal(protectedResponse.data.user.role,'admin');
+  const aiCapabilities=await jsonFetch(`${base}/api/v3/ai/capabilities`,{headers:deviceHeaders(registered.data.device_secret,registered.data.device_id,token,'GET','/api/v3/ai/capabilities')},getLogs);assert.equal(aiCapabilities.r.status,200,getLogs());assert.equal(aiCapabilities.data.role,'admin');
 });
