@@ -1,0 +1,2 @@
+const test=require('node:test');const assert=require('node:assert/strict');const {execFileSync}=require('node:child_process');const files=['server.js','migrate.js','ai-premium-routes.js','ai-language-enterprise-routes.js','enterprise-hardening-routes.js','enterprise-intelligence-routes.js','enterprise-backup-routes.js'];
+test('enterprise JavaScript files parse successfully',()=>{for(const file of files)assert.doesNotThrow(()=>execFileSync(process.execPath,['--check',file],{stdio:'pipe'}),file)});
