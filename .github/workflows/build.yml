@@ -13,8 +13,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-      - run: npm ci
+      - run: npm install
       - run: npm run dist
       - uses: actions/upload-artifact@v4
         with:
@@ -28,13 +27,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 21
       - uses: android-actions/setup-android@v3
-      - run: npm ci
+      - run: npm install
       - run: npx cap add android
         env:
           MKPOS_SERVER_URL: ${{ vars.MKPOS_SERVER_URL }}
