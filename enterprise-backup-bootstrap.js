@@ -1,0 +1,1 @@
+const express=require('express');const path=require('path');const register=require(path.join(__dirname,'enterprise-backup-routes.js'));const original=express.application.listen;if(!express.application.__mkEnterpriseBackup){express.application.__mkEnterpriseBackup=true;express.application.listen=function(...args){register(this);return original.apply(this,args)}}
