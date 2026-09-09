@@ -11,14 +11,14 @@ Premium offline-first restaurant POS/control center for **MK Pizza & Ice Bar**, 
 - Customer profiles/history/tracking, addresses, favorites, loyalty storage, notifications, WebSocket events, Android FCM support and rider GPS.
 - Premium POS workspace styling with dense operational cards, live ticket/cart workspace, responsive mobile layout and a dedicated control-center settings surface.
 - **Local AI Copilot** with visible chat, browser voice input/output, POS-aware commands and an offline rules engine.
-- Optional local Ollama integration for full natural-language reasoning. Local Ollama access at `http://localhost:11434` does **not** require an API key; cloud AI is optional. citeturn3search0turn3search2
+- Optional local Ollama integration for full natural-language reasoning. Local Ollama access at `http://localhost:11434` does not require an API key; cloud AI is optional.
 - Enterprise multilingual AI, forecasting, procurement, menu intelligence, anomaly signals, operational reports and health/food-safety/waste insights remain available as optional enterprise layers.
 - Enterprise backup service for SQLite backup creation, SHA-256 verification and integrity-checked restore staging.
 - CI syntax/smoke-test pipeline on pushes and pull requests.
 
 ## Local AI
 
-The POS no longer needs a cloud API key for the new Local AI Copilot. The UI always has a local deterministic engine for common POS commands. For a full local language model, install Ollama and install any compatible local model; Ollama exposes its local API on `http://localhost:11434/api`. citeturn3search11turn3search2
+The POS no longer needs a cloud API key for the new Local AI Copilot. The UI always has a local deterministic engine for common POS commands. For a full local language model, install Ollama and install any compatible local model; Ollama exposes its local API on `http://localhost:11434/api`.
 
 The Copilot can understand commands such as:
 
@@ -34,7 +34,7 @@ The older enterprise AI endpoints may still use their configured cloud provider 
 
 ## Windows EXE
 
-The desktop shell starts the POS backend itself, so the Windows build is the closest path to a fully standalone POS. Electron Forge/electron-builder are the normal packaging layer for distributable Windows installers. citeturn0search7turn1search6
+The desktop shell starts the POS backend itself, so the Windows build is the closest path to a fully standalone POS. Electron/electron-builder are the packaging layer for distributable Windows installers.
 
 ```text
 npm install
@@ -45,7 +45,7 @@ npm run dist
 
 The installer is produced under `dist/` as an NSIS Windows installer. The current Electron shell starts the SQLite POS server automatically before opening the window.
 
-For full local generative AI on Windows, install Ollama once and install a local model. The POS connects only to the local Ollama service. Ollama itself documents Windows support and local API usage. citeturn3search11turn3search2
+For full local generative AI on Windows, install Ollama once and install a local model. The POS connects only to the local Ollama service.
 
 ## Android APK
 
