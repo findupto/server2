@@ -7,7 +7,7 @@ const {WebSocketServer,WebSocket}=require('ws');
 const PORT=Number(process.env.PORT||4173),DB_PATH=process.env.DB_PATH||path.join(__dirname,'mkpos.db'),JWT_SECRET=process.env.JWT_SECRET||'mkpos-change-this-secret';
 const db=new Database(DB_PATH),clients=new Set();let lastRowid=0;
 const sha=s=>crypto.createHash('sha256').update(String(s)).digest('hex');
-const hmac=(k,m)=>crypto.createHmac('sha256',k).update(m).digest('hex');
+const hmac=(k,m)=>crypto.createHmac('sha256',Buffer.from(String(k),'hex')).update(m).digest('hex');
 const safe=(a,b)=>{try{const x=Buffer.from(String(a),'hex'),y=Buffer.from(String(b),'hex');return x.length===y.length&&crypto.timingSafeEqual(x,y)}catch{return false}};
 function userFromToken(t){try{return jwt.verify(String(t||''),JWT_SECRET)}catch{return null}}
 function canSee(user,e){if(!user)return false;if(['admin','owner'].includes(user.role))return true;if(['product','variant','deal','coupon','table'].includes(e.entity))return true;if(e.entity==='order'||e.entity==='order_items'){const id=e.entity==='order'?e.entity_id:e.order_id||e.entity_id,o=db.prepare('SELECT customer_id,waiter_id,rider_id FROM orders WHERE id=?').get(id);if(!o)return false;return(user.role==='waiter'&&o.waiter_id===user.id)||(user.role==='rider'&&o.rider_id===user.id)||(user.role==='customer'&&o.customer_id===user.id)}return false}
