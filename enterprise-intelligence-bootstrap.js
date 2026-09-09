@@ -1,0 +1,1 @@
+const express=require('express');const path=require('path');const register=require(path.join(__dirname,'enterprise-intelligence-routes.js'));const original=express.application.listen;if(!express.application.__mkEnterpriseIntelligence){express.application.__mkEnterpriseIntelligence=true;express.application.listen=function(...args){register(this);return original.apply(this,args)}}
