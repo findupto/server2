@@ -77,7 +77,7 @@ test('production server starts and trusted-device authentication works end-to-en
     './ai-supervisor-bootstrap.js','./realtime-sync-bootstrap.js','./api-security-bootstrap.js','./local-ai-bootstrap.js'
   ];
   const args=[];for(const mod of preload)args.push('-r',mod);args.push('server.js');
-  const child=spawn(process.execPath,args,{cwd:process.cwd(),env:{...process.env,PORT:String(port),DB_PATH:dbPath,JWT_SECRET:'test-secret-'+crypto.randomBytes(12).toString('hex'),REQUIRE_TRUSTED_DEVICE:'1',OPENAI_API_KEY:''},stdio:['ignore','pipe','pipe']});
+  const child=spawn(process.execPath,args,{cwd:process.cwd(),env:{...process.env,PORT:String(port),DB_PATH:dbPath,JWT_SECRET:'test-secret-'+crypto.randomBytes(12).toString('hex'),REQUIRE_TRUSTED_DEVICE:'1',OPENAI_API_KEY:'',ADMIN_PIN:'1122',OWNER_PIN:'0099'},stdio:['ignore','pipe','pipe']});
   let logs='';child.stdout.on('data',b=>{logs+=b.toString()});child.stderr.on('data',b=>{logs+=b.toString()});
   const getLogs=()=>logs.slice(-16000);
   t.after(async()=>{if(child.exitCode===null)child.kill('SIGTERM');await wait(250);for(const suffix of ['', '-shm', '-wal'])try{fs.unlinkSync(dbPath+suffix)}catch{}});
@@ -85,7 +85,7 @@ test('production server starts and trusted-device authentication works end-to-en
   await waitFor(`${base}/api/health`,child,getLogs);
   const health=await jsonFetch(`${base}/api/health`,{},getLogs);assert.equal(health.r.status,200);assert.equal(health.data.ok,true);
   const login=await jsonFetch(`${base}/api/login`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({username:'admin',password:'1122'})},getLogs);
-  assert.equal(login.r.status,200,getLogs());const token=login.data.token;assert.ok(token);
+  assert.equal(login.r.status,200,`login failed: HTTP ${login.r.status} ${login.text}\n${getLogs()}`);const token=login.data.token;assert.ok(token);
   const noDevice=await jsonFetch(`${base}/api/bootstrap`,{headers:{authorization:`Bearer ${token}`}},getLogs);assert.equal(noDevice.r.status,401);assert.equal(noDevice.data.error,'Trusted app device authentication required');
   const registered=await jsonFetch(`${base}/api/device/register`,{method:'POST',headers:{'content-type':'application/json',authorization:`Bearer ${token}`},body:JSON.stringify({device_name:'CI device',device_type:'test'})},getLogs);
   assert.equal(registered.r.status,200,getLogs());assert.ok(registered.data.device_id);assert.ok(registered.data.device_secret);
