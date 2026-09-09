@@ -6,7 +6,7 @@ const config: CapacitorConfig={
   appName:'MK Pizza & Ice Bar POS',
   webDir:'public',
   bundledWebRuntime:false,
-  server:serverUrl?{url:serverUrl,cleartext:false}:undefined,
+  server:serverUrl?{url:serverUrl,cleartext:serverUrl.startsWith('http://')}:undefined,
   android:{allowMixedContent:false}
 };
 export default config;
