@@ -14,6 +14,9 @@ const hash=s=>crypto.pbkdf2Sync(String(s),'mkpos-local-salt',120000,32,'sha256')
 const verify=(s,h)=>{try{return crypto.timingSafeEqual(Buffer.from(hash(s),'hex'),Buffer.from(h,'hex'))}catch{return false}};
 const q=(sql,...a)=>db.prepare(sql).get(...a),all=(sql,...a)=>db.prepare(sql).all(...a);
 
+// Health must stay public even when security/bootstrap middleware is injected before routes.
+app.use('/api/health',(req,res,next)=>{if(req.method==='GET')return res.json({ok:true,service:'mk-pizza-pos',version:'1.2.0',time:now()});next()});
+
 db.exec(`
 CREATE TABLE IF NOT EXISTS users(id TEXT PRIMARY KEY,username TEXT UNIQUE,password_hash TEXT,role TEXT,name TEXT,active INTEGER DEFAULT 1);
 CREATE TABLE IF NOT EXISTS products(id TEXT PRIMARY KEY,name TEXT,category TEXT,sku TEXT UNIQUE,price REAL DEFAULT 0,unit TEXT DEFAULT 'pcs',active INTEGER DEFAULT 1,image TEXT,description TEXT DEFAULT '');
