@@ -2,26 +2,66 @@
 
 Premium offline-first restaurant POS/control center for **MK Pizza & Ice Bar**, Abbas Chowk, Collage Road, Bhakkar.
 
-## Current release — 2.4.0
+## Current release — 2.4.2
 
-- Role-based customer, waiter, rider, kitchen, cashier, admin and owner displays.
+- Role-based customer, waiter, rider, kitchen, cashier, admin and owner workspaces.
 - Menu/product CRUD, variants, deals, customers and takeaway/dine-in/delivery/online orders.
 - Inventory, recipes/BOM, purchases, suppliers, production, wastage, expenses, approvals, analytics, audit and sync APIs.
 - SQLite WAL persistence, PWA shell and Electron Windows desktop shell.
 - Customer profiles/history/tracking, addresses, favorites, loyalty storage, notifications, WebSocket events, Android FCM support and rider GPS.
-- Universal AI POS Agent with natural-language correction, multi-turn context, role-aware execution, browser voice and camera/vision.
-- Enterprise multilingual AI: auto detection and response preferences for English, Urdu, Punjabi, Saraiki, Roman variants and mixed-language commands, with model-dependent support for additional languages.
-- Enterprise AI intelligence APIs for sales forecasting, procurement/reorder recommendations, menu margin intelligence, anomaly signals, operational reports and health/food-safety/waste insights.
-- Enterprise operations APIs for reservations, product modifiers, delivery zones and branch registry.
-- Enterprise backup service for SQLite backup creation, SHA-256 verification and integrity-checked restore staging; live replacement remains a controlled maintenance operation.
-- Enterprise health, event, evaluation and metrics foundations.
+- Premium POS workspace styling with dense operational cards, live ticket/cart workspace, responsive mobile layout and a dedicated control-center settings surface.
+- **Local AI Copilot** with visible chat, browser voice input/output, POS-aware commands and an offline rules engine.
+- Optional local Ollama integration for full natural-language reasoning. Local Ollama access at `http://localhost:11434` does **not** require an API key; cloud AI is optional. citeturn3search0turn3search2
+- Enterprise multilingual AI, forecasting, procurement, menu intelligence, anomaly signals, operational reports and health/food-safety/waste insights remain available as optional enterprise layers.
+- Enterprise backup service for SQLite backup creation, SHA-256 verification and integrity-checked restore staging.
 - CI syntax/smoke-test pipeline on pushes and pull requests.
 
-## AI behavior
+## Local AI
 
-The AI layer is designed to understand meaning rather than exact keywords. It can normalize spelling errors, missing words, speech-to-text mistakes, accents, slang, shorthand, numbers written as words, Roman Urdu/Punjabi/Saraiki, code-switching and longer multi-step requests. Consequential ambiguity is surfaced for clarification/confirmation instead of silently guessing. POS facts are taken from live database context rather than invented.
+The POS no longer needs a cloud API key for the new Local AI Copilot. The UI always has a local deterministic engine for common POS commands. For a full local language model, install Ollama and install any compatible local model; Ollama exposes its local API on `http://localhost:11434/api`. citeturn3search11turn3search2
 
-Language support is not a claim that every human language or dialect will work perfectly: quality depends on the configured model, audio transcription, script and input quality. The enterprise layer gives first-class handling to English, Urdu, Punjabi and Saraiki and gracefully allows other model-supported languages.
+The Copilot can understand commands such as:
+
+- `add 2 chicken pizza`
+- `today sales`
+- `low stock`
+- `order 104`
+- `make table 5 available`
+
+When Ollama is available, the same UI sends natural-language questions to the local model with live POS context. No OpenAI API key is involved in this path.
+
+The older enterprise AI endpoints may still use their configured cloud provider where applicable. They are not required for the Local AI Copilot.
+
+## Windows EXE
+
+The desktop shell starts the POS backend itself, so the Windows build is the closest path to a fully standalone POS. Electron Forge/electron-builder are the normal packaging layer for distributable Windows installers. citeturn0search7turn1search6
+
+```text
+npm install
+npm test
+npm run desktop
+npm run dist
+```
+
+The installer is produced under `dist/` as an NSIS Windows installer. The current Electron shell starts the SQLite POS server automatically before opening the window.
+
+For full local generative AI on Windows, install Ollama once and install a local model. The POS connects only to the local Ollama service. Ollama itself documents Windows support and local API usage. citeturn3search11turn3search2
+
+## Android APK
+
+The repository already uses Capacitor for Android. The current Android architecture is a native WebView around the POS frontend, with `MKPOS_SERVER_URL` available for pointing the app at the POS backend. It is **not yet an embedded Node.js backend**, so a production Android deployment must currently use a reachable POS server URL rather than pretending the APK contains the complete Node/SQLite server.
+
+For a LAN server:
+
+```text
+set MKPOS_SERVER_URL=http://192.168.1.100:4173
+npm run android:sync
+npm run android:build
+```
+
+The debug APK is generated by Gradle under `android/app/build/outputs/apk/debug/`.
+
+For a genuinely standalone Android POS, the next architecture step is to move the backend storage/action layer to Android-native SQLite/Capacitor APIs (or embed a mobile-compatible Node/WASM runtime) and package the local AI runtime separately. Do not ship an APK that merely displays a remote server and call it standalone.
 
 ## Enterprise AI endpoints
 
@@ -49,7 +89,7 @@ Payment terminals, receipt/KDS printers, cash drawers, barcode scanners and cust
 
 ## Security and reliability
 
-Production values must be configured through deployment secrets: `OPENAI_API_KEY`, a strong `JWT_SECRET`, replaced `OWNER_PIN`/`ADMIN_PIN`, `DB_PATH`, and optional FCM credentials. Backups can be created and integrity checked through the enterprise backup service. Restore is deliberately staged rather than an API-level live database replacement.
+Production values must be configured through deployment secrets: a strong `JWT_SECRET`, replaced `OWNER_PIN`/`ADMIN_PIN`, `DB_PATH`, and optional cloud-provider credentials for enterprise AI. Local AI does not require a cloud API key. Backups can be created and integrity checked through the enterprise backup service. Restore is deliberately staged rather than an API-level live database replacement.
 
 The CI workflow runs `npm install` and `npm test`; the smoke suite verifies JavaScript syntax for the core and enterprise modules. This repository does not contain a lockfile, so CI intentionally uses `npm install`.
 
