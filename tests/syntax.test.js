@@ -17,12 +17,17 @@ function jsFiles(dir){
 }
 
 test('all repository JavaScript files parse successfully',()=>{
+  const failures=[];
   for(const file of jsFiles(process.cwd())){
     try{execFileSync(process.execPath,['--check',file],{stdio:'pipe'})}
     catch(e){
       const detail=Buffer.isBuffer(e.stderr)?e.stderr.toString():String(e.stderr||e.message||e);
-      throw new Error(`JavaScript syntax error in ${path.relative(process.cwd(),file)}\n${detail}`);
+      failures.push(`JavaScript syntax error in ${path.relative(process.cwd(),file)}\n${detail}`);
     }
+  }
+  if(failures.length){
+    process.stderr.write(`\n${failures.join('\n\n')}\n`);
+    throw new Error(`${failures.length} JavaScript file(s) failed syntax validation`);
   }
 });
 
@@ -64,12 +69,17 @@ function deviceHeaders(secret,deviceId,token,method,url,body=''){
 test('production server starts and trusted-device authentication works end-to-end',async t=>{
   const port=4180+Math.floor(Math.random()*100);
   const dbPath=path.join(process.cwd(),`.test-mkpos-${process.pid}-${port}.db`);
-  const isWindows=process.platform==='win32';
-  const command=isWindows?process.env.ComSpec:process.execPath;
-  const args=isWindows?['/d','/s','/c','npm start']:['npm','start'];
-  const child=spawn(command,args,{cwd:process.cwd(),env:{...process.env,PORT:String(port),DB_PATH:dbPath,JWT_SECRET:'test-secret-'+crypto.randomBytes(12).toString('hex'),REQUIRE_TRUSTED_DEVICE:'1',OPENAI_API_KEY:''},stdio:['ignore','pipe','pipe'],windowsVerbatimArguments:false});
+  const preload=[
+    './production-upgrades.js','./smart-premium-bootstrap.js','./ai-understanding-bootstrap.js','./ai-status-bootstrap.js',
+    './ai-premium-bootstrap.js','./ai-language-enterprise-bootstrap.js','./enterprise-hardening-bootstrap.js','./enterprise-intelligence-bootstrap.js',
+    './enterprise-backup-bootstrap.js','./financial-hardening-bootstrap.js','./ai-model-policy.js','./premium-bootstrap.js','./ai-bootstrap.js',
+    './ai-monitor-bootstrap.js','./ai-autonomous-bootstrap.js','./ai-agent-bootstrap.js','./ai-vision-bootstrap.js','./ai-realtime-bootstrap.js',
+    './ai-supervisor-bootstrap.js','./realtime-sync-bootstrap.js','./api-security-bootstrap.js','./local-ai-bootstrap.js'
+  ];
+  const args=[];for(const mod of preload)args.push('-r',mod);args.push('server.js');
+  const child=spawn(process.execPath,args,{cwd:process.cwd(),env:{...process.env,PORT:String(port),DB_PATH:dbPath,JWT_SECRET:'test-secret-'+crypto.randomBytes(12).toString('hex'),REQUIRE_TRUSTED_DEVICE:'1',OPENAI_API_KEY:''},stdio:['ignore','pipe','pipe']});
   let logs='';child.stdout.on('data',b=>{logs+=b.toString()});child.stderr.on('data',b=>{logs+=b.toString()});
-  const getLogs=()=>logs.slice(-12000);
+  const getLogs=()=>logs.slice(-16000);
   t.after(async()=>{if(child.exitCode===null)child.kill('SIGTERM');await wait(250);for(const suffix of ['', '-shm', '-wal'])try{fs.unlinkSync(dbPath+suffix)}catch{}});
   const base=`http://127.0.0.1:${port}`;
   await waitFor(`${base}/api/health`,child,getLogs);
