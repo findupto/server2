@@ -83,9 +83,10 @@ test('production server starts and trusted-device authentication works end-to-en
   t.after(async()=>{if(child.exitCode===null)child.kill('SIGTERM');await wait(250);for(const suffix of ['', '-shm', '-wal'])try{fs.unlinkSync(dbPath+suffix)}catch{}});
   const base=`http://127.0.0.1:${port}`;
   await waitFor(`${base}/api/health`,child,getLogs);
-  const health=await jsonFetch(`${base}/api/health`,{},getLogs);assert.equal(health.r.status,200);assert.equal(health.data.ok,true);
+  await wait(750);
   const login=await jsonFetch(`${base}/api/login`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({username:'admin',password:'1122'})},getLogs);
   assert.equal(login.r.status,200,`login failed: HTTP ${login.r.status} ${login.text}\n${getLogs()}`);const token=login.data.token;assert.ok(token);
+  const health=await jsonFetch(`${base}/api/health`,{},getLogs);assert.equal(health.r.status,200,`health failed: HTTP ${health.r.status} ${health.text}\n${getLogs()}`);assert.equal(health.data.ok,true);
   const noDevice=await jsonFetch(`${base}/api/bootstrap`,{headers:{authorization:`Bearer ${token}`}},getLogs);assert.equal(noDevice.r.status,401);assert.equal(noDevice.data.error,'Trusted app device authentication required');
   const registered=await jsonFetch(`${base}/api/device/register`,{method:'POST',headers:{'content-type':'application/json',authorization:`Bearer ${token}`},body:JSON.stringify({device_name:'CI device',device_type:'test'})},getLogs);
   assert.equal(registered.r.status,200,getLogs());assert.ok(registered.data.device_id);assert.ok(registered.data.device_secret);
