@@ -1,0 +1,1 @@
+const express=require('express');const path=require('path');const register=require(path.join(__dirname,'enterprise-hardening-routes.js'));const original=express.application.listen;if(!express.application.__mkEnterpriseHardening){express.application.__mkEnterpriseHardening=true;express.application.listen=function(...args){register(this);return original.apply(this,args)}}
