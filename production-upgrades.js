@@ -77,4 +77,4 @@ app.get('/api/v2/health',(req,res)=>res.json({ok:true,service:'mkpos-production-
 }
 
 initSchema();
-express.application.listen=function(...args){const app=this;registerRoutes(app);const server=originalListen.apply(app,args);ensureOrderTriggers();try{const WebSocket=require('ws');const wss=new WebSocket.Server({server,path:'/ws'});const clients=new Set();wss.on('connection',ws=>{clients.add(ws);ws.on('close',()=>clients.delete(ws));ws.send(JSON.stringify({type:'connected',at:now()}))});const timer=setInterval(()=>{try{processOrderEvents();const msg=JSON.stringify({type:'sync',at:now()});for(const ws of clients)if(ws.readyState===1)ws.send(msg)}catch{}},2500);server.on('close',()=>clearInterval(timer))}catch{}return server};
+express.application.listen=function(...args){const app=this;registerRoutes(app);const server=originalListen.apply(app,args);ensureOrderTriggers();const timer=setInterval(()=>{try{processOrderEvents()}catch{}} ,2500);server.on('close',()=>{clearInterval(timer);try{db.close()}catch{}});return server};
