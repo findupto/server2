@@ -97,4 +97,8 @@ test('production server starts and trusted-device authentication works end-to-en
   const protectedResponse=await jsonFetch(`${base}/api/bootstrap`,{headers});
   assert.equal(protectedResponse.r.status,200,logs);
   assert.equal(protectedResponse.data.user.role,'admin');
+
+  const aiCapabilities=await jsonFetch(`${base}/api/v3/ai/capabilities`,{headers:deviceHeaders(registered.data.device_secret,registered.data.device_id,token,'GET','/api/v3/ai/capabilities')});
+  assert.equal(aiCapabilities.r.status,200,logs);
+  assert.equal(aiCapabilities.data.role,'admin');
 });
