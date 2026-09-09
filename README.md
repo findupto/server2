@@ -2,123 +2,55 @@
 
 Premium offline-first restaurant POS/control center for **MK Pizza & Ice Bar**, Abbas Chowk, Collage Road, Bhakkar.
 
-## Current release
+## Current release — 2.4.0
 
 - Role-based customer, waiter, rider, kitchen, cashier, admin and owner displays.
-- Menu/product CRUD with categories, SKU, unit, price, description and activation/deactivation.
-- Bulk CSV import/export for products and variants.
-- Product variants such as Small/Medium/Large/XL with variant-specific prices and SKUs.
-- Deals/combos, customers, takeaway/dine-in/delivery/online orders, kitchen authorization and queue, cashier payment/closing, rider workflow.
-- 20-table status map, inventory, recipes/BOM, purchases, suppliers, production, wastage, expenses, approvals, analytics, audit and sync APIs.
+- Menu/product CRUD, variants, deals, customers and takeaway/dine-in/delivery/online orders.
+- Inventory, recipes/BOM, purchases, suppliers, production, wastage, expenses, approvals, analytics, audit and sync APIs.
 - SQLite WAL persistence, PWA shell and Electron Windows desktop shell.
-- Universal AI POS Agent: natural chat, continuous browser voice, camera/vision inspection, multi-step instructions and role-aware execution across products, prices, sales, tables, orders, kitchen, riders, customers, inventory, expenses and staff messaging.
-- AI Security Monitor for suspicious operational conditions and safe automatic corrections.
-- Voice Table Ordering for customer self-order scenarios.
+- Customer profiles/history/tracking, addresses, favorites, loyalty storage, notifications, WebSocket events, Android FCM support and rider GPS.
+- Universal AI POS Agent with natural-language correction, multi-turn context, role-aware execution, browser voice and camera/vision.
+- Enterprise multilingual AI: auto detection and response preferences for English, Urdu, Punjabi, Saraiki, Roman variants and mixed-language commands, with model-dependent support for additional languages.
+- Enterprise AI intelligence APIs for sales forecasting, procurement/reorder recommendations, menu margin intelligence, anomaly signals, operational reports and health/food-safety/waste insights.
+- Enterprise operations APIs for reservations, product modifiers, delivery zones and branch registry.
+- Enterprise backup service for SQLite backup creation, SHA-256 verification and integrity-checked restore staging; live replacement remains a controlled maintenance operation.
+- Enterprise health, event, evaluation and metrics foundations.
+- CI syntax/smoke-test pipeline on pushes and pull requests.
 
-## Production customer/staff layer
+## AI behavior
 
-The project now includes an additive `production-upgrades.js` layer for the parts that were missing from a production-grade customer/staff experience:
+The AI layer is designed to understand meaning rather than exact keywords. It can normalize spelling errors, missing words, speech-to-text mistakes, accents, slang, shorthand, numbers written as words, Roman Urdu/Punjabi/Saraiki, code-switching and longer multi-step requests. Consequential ambiguity is surfaced for clarification/confirmation instead of silently guessing. POS facts are taken from live database context rather than invented.
 
-- Customer account/profile API with editable name, phone, address and notes.
-- Complete customer order history with order items and lifecycle timeline.
-- Per-order tracking endpoint with the latest rider location.
-- Saved customer delivery addresses and favorites.
-- Loyalty account/ledger storage ready for points automation.
-- Notification inbox for every user/customer with read/unread state.
-- Android push-token registration and Firebase Cloud Messaging HTTP v1 delivery when FCM credentials are configured.
-- WebSocket `/ws` event channel plus notification polling fallback.
-- Rider live GPS location capture tied to an active delivery.
-- Staff task system for waiter, kitchen, cashier and rider operational work.
-- Automatic order lifecycle event capture using SQLite triggers, so legacy order routes also produce tracking history.
-- Production health endpoint at `/api/v2/health`.
+Language support is not a claim that every human language or dialect will work perfectly: quality depends on the configured model, audio transcription, script and input quality. The enterprise layer gives first-class handling to English, Urdu, Punjabi and Saraiki and gracefully allows other model-supported languages.
 
-## How the customer works
+## Enterprise AI endpoints
 
-1. Customer installs the Android/PWA app and creates a customer account.
-2. The account remains the same across supported devices when connected to the same production server.
-3. The customer sees the menu, variants, deals and cart, then submits takeaway, dine-in, delivery or online orders.
-4. Every order is attached to the customer account, so the customer can retrieve history, items, status timeline and delivery location.
-5. Status changes generate in-app notifications and, when Firebase is configured, Android push notifications.
-6. Saved addresses, favorites and loyalty points are available through the production customer APIs.
+- `/api/ai/premium` — natural-language understanding and safe POS execution.
+- `/api/ai/language` — language detection, correction, Romanization and translation.
+- `/api/ai/forecast` — moving-average demand/revenue guidance.
+- `/api/ai/procurement` — recipe-aware replenishment recommendations.
+- `/api/ai/menu-intelligence` — estimated recipe cost and menu margin analysis.
+- `/api/ai/anomalies` — refund, discount and wastage anomaly signals.
+- `/api/ai/report` — recorded-data operational reports.
+- `/api/ai/insights` — consolidated operational intelligence.
+- `/api/health/intelligence` and `/api/health/ai-insights` — conservative food/health/waste intelligence.
 
-## Staff workflows
+AI recommendations are advisory unless an existing server-side action is explicitly executed and authorized. Nutrition and food-safety outputs are operational guidance, not medical diagnosis or legal compliance certification.
 
-### Waiter
+## Enterprise POS endpoints
 
-- Create/handle dine-in orders and table service.
-- See orders assigned to the waiter.
-- Authorize pending orders.
-- Receive workflow notifications for new orders and staff tasks.
+- Reservations: `/api/enterprise/reservations`
+- Product modifiers: `/api/enterprise/modifiers`
+- Delivery zones: `/api/enterprise/delivery-zones`
+- Branch registry: `/api/enterprise/branches`
+- SQLite backups: `/api/enterprise/backups`
 
-### Kitchen
+Payment terminals, receipt/KDS printers, cash drawers, barcode scanners and customer displays use deployment-specific hardware/provider integrations. The core POS must never pretend a real device or payment succeeded when no provider confirmed it.
 
-- See the kitchen queue and timeline.
-- Move authorized orders to preparing and then ready.
-- Receive automatic notifications when an order is authorized.
-- Use AI commands for stock checks, order lookups and operational instructions, subject to server-side role permissions.
+## Security and reliability
 
-### Rider
+Production values must be configured through deployment secrets: `OPENAI_API_KEY`, a strong `JWT_SECRET`, replaced `OWNER_PIN`/`ADMIN_PIN`, `DB_PATH`, and optional FCM credentials. Backups can be created and integrity checked through the enterprise backup service. Restore is deliberately staged rather than an API-level live database replacement.
 
-- See assigned delivery orders.
-- Dispatch a ready order, move it to out-for-delivery and mark it delivered.
-- Start live GPS sharing from the delivery screen.
-- Customer tracking can use the latest rider location.
-- Receive delivery workflow notifications.
+The CI workflow runs `npm install` and `npm test`; the smoke suite verifies JavaScript syntax for the core and enterprise modules. This repository does not contain a lockfile, so CI intentionally uses `npm install`.
 
-### Cashier
-
-- See ready/delivered orders awaiting payment.
-- Record payment method and close paid orders.
-- Receive payment-ready workflow notifications.
-
-### Admin / Owner
-
-- Full management, inventory, staff, analytics, expenses, approvals and audit access.
-- Create staff tasks and inspect operational history.
-- Use AI for multi-step POS commands while server-side permissions and audit controls remain authoritative.
-
-## Notification model
-
-Order lifecycle events are automatically captured:
-
-`pending → authorized → preparing → ready → out_for_delivery → delivered → closed`
-
-The notification layer can notify the correct audience at each step. Notifications are persisted in SQLite, displayed in the app inbox, synchronized over WebSocket when available, and can be delivered through FCM to Android devices when production credentials are configured.
-
-## AI automation
-
-The AI command center accepts complete instructions rather than requiring one command at a time. It can understand quantities, variants, tables, order references, staff roles and multi-step sequences, then execute approved actions through the server with role checks and audit logging.
-
-Examples:
-
-- `Create Chicken Fajita Pizza with Small 550, Medium 1050, Large 1350 and XL 1950.`
-- `Make sale: 1 Large Pizza, 2 Special Shawarma, 4 Zinger Burger Special and 5 Hotwings. Table 7. Send it to kitchen.`
-- `Show the latest orders for customer Ali, assign the delivery to Rider Ahmed and tell the rider the order is ready.`
-- `Check inventory for cheese and tell kitchen if stock is low.`
-
-Voice mode supports continuous browser recognition and spoken responses. The existing AI layer also supports camera/vision inspection. Ambiguous or low-confidence actions can require confirmation; server-side permissions remain authoritative.
-
-## Production environment
-
-Required/important values:
-
-- `OPENAI_API_KEY` for AI features.
-- `JWT_SECRET` — use a long random production secret; never keep the development fallback.
-- `OWNER_PIN` and `ADMIN_PIN` — replace development credentials before deployment.
-- `DB_PATH` — point to the production SQLite file when SQLite is used.
-- `FCM_PROJECT_ID`, `FCM_CLIENT_EMAIL`, `FCM_PRIVATE_KEY` — optional Firebase Cloud Messaging credentials for Android push delivery.
-
-For multi-location/high-concurrency production, move the shared operational database and job/event queue to a managed server database/queue rather than exposing a SQLite file directly. Keep HTTPS enabled and maintain automated backups and restore tests.
-
-## Android build
-
-The project uses Capacitor. After installing dependencies, run the Android sync/build flow so the Capacitor push-notifications plugin is included in the Play Store build.
-
-## Remaining hardening before public rollout
-
-- Configure Firebase/FCM production credentials and verify push delivery on real Android devices.
-- Configure HTTPS, backups and restore drills.
-- Run automated API/UI tests and concurrency tests against the production deployment.
-- Replace all development PINs/secrets.
-- Add payment-terminal, printer and cash-drawer integrations for the exact hardware used by the restaurant.
-- For true multi-location operation, use a shared production database and queue rather than local SQLite replication.
+For multi-location/high-concurrency production, use a managed shared database and queue instead of exposing or replicating a SQLite file. For public rollout, still perform real device, payment, printer, concurrency, disaster-recovery and security tests against the actual deployment and hardware.
